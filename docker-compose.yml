@@ -54,6 +54,8 @@ services:
     image: alpine
     restart: always
     container_name: firefly_iii_cron
+    environment:
+      - TZ=${TZ}
     env_file: .envfiles/.env
     command: sh -c " apk add tzdata && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime | echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/PLEASE_REPLACE_WITH_32_CHAR_CODE;echo\" | crontab - && crond -f -L /dev/stdout"
     networks:
@@ -69,8 +71,7 @@ services:
     ports:
       - 8084:80
     networks:
-      - web
-      - internal
+      - firefly_iii
     environment:
       - PMA_ARBITRARY=1
 
