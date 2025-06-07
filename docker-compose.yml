@@ -6,6 +6,9 @@
 # Other URL's will give 500 | Server Error
 #
 
+include:
+  - secrets.yml
+
 services:
   app:
     image: fireflyiii/core:latest
@@ -19,8 +22,26 @@ services:
       - firefly_iii
     ports:
       - 80:8080
+    secrets:
+      - app_key
+      - db_database
+      - db_password
+      - db_user
+      - mail_encryption
+      - mail_from_address
+      - mail_host
+      - mail_mailer
+      - mail_password
+      - mail_port
+      - mail_username
+      - map_default_lat
+      - map_default_long
+      - site_owner
+      - timezone
+      - vanity_url
     depends_on:
       - db
+
   db:
     image: mariadb:lts
     hostname: db
@@ -29,6 +50,11 @@ services:
     env_file: .envfiles/.db.env
     networks:
       - firefly_iii
+    secrets:
+      - db_database
+      - db_password
+      - db_root_password
+      - db_user
     volumes:
       - firefly_iii_db:/var/lib/mysql
 
@@ -43,23 +69,41 @@ services:
       - '81:8080'
     depends_on:
       - app
+    secrets:
+      - auto_import_secret
+      - firefly_iii_access_token
+      - firefly_iii_client_id
+      - mail_destination
+      - mail_encryption
+      - mail_from_address
+      - mail_host
+      - mail_mailer
+      - mail_password
+      - mail_port
+      - mail_username
+      - spectre_app_id
+      - spectre_customer_identifier
+      - spectre_secret
+      - timezone
+      - vanity_url
+
     env_file: .envfiles/.importer.env
 
-  cron:
-    #
-    # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
-    # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
-    # Use this URL for inspiration: https://www.random.org/strings/?num=1&len=32&digits=on&upperalpha=on&loweralpha=on&unique=on&format=html&rnd=new
-    #
-    image: alpine
-    restart: always
-    container_name: firefly_iii_cron
-    environment:
-      - TZ=${TZ}
-    env_file: .envfiles/.env
-    command: sh -c " apk add tzdata && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime | echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/PLEASE_REPLACE_WITH_32_CHAR_CODE;echo\" | crontab - && crond -f -L /dev/stdout"
-    networks:
-      - firefly_iii
+  # cron:
+  #   #
+  #   # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
+  #   # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
+  #   # Use this URL for inspiration: https://www.random.org/strings/?num=1&len=32&digits=on&upperalpha=on&loweralpha=on&unique=on&format=html&rnd=new
+  #   #
+  #   image: alpine
+  #   restart: always
+  #   container_name: firefly_iii_cron
+  #   environment:
+  #     - TIMEZONE=${TZ}
+  #   env_file: .envfiles/.env
+  #   command: sh -c " apk add tzdata && ln -s /usr/share/zoneinfo/${TIMEZONE} /etc/localtime | echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/PLEASE_REPLACE_WITH_32_CHAR_CODE;echo\" | crontab - && crond -f -L /dev/stdout"
+  #   networks:
+  #     - firefly_iii
 
   phpmyadmin:
     image: phpmyadmin
