@@ -39,6 +39,13 @@ services:
       - site_owner
       - timezone
       - vanity_url
+    labels:
+      # Frontend
+      - "traefik.enable=true"
+      - "traefik.http.routers.firefly.rule=Host(`firefly.fet.fit`)"
+      - "traefik.http.routers.firefly.entrypoints=websecure"
+      - "traefik.http.services.firefly.loadbalancer.server.port=8080"
+      - "traefik.http.routers.firefly.tls.certresolver=lets-encrypt"
     depends_on:
       - db
 
@@ -69,6 +76,14 @@ services:
       - '81:8080'
     depends_on:
       - app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ffdata.rule=Host(`ffdata.fet.fit`)"
+      - "traefik.http.routers.ffdata.entrypoints=websecure"
+      - "traefik.http.services.ffdata.loadbalancer.server.port=8080"
+      - "traefik.http.routers.ffdata.tls.certresolver=lets-encrypt"
+      - "traefik.http.middlewares.ffdata-auth.basicAuth.users=admin:$$apr1$$BNuLy8aR$$jF9QYMFQ9ynsEspct2jGz."
+      - "traefik.http.routers.ffdata.middlewares=ffdata-auth"
     secrets:
       - auto_import_secret
       - firefly_iii_access_token
@@ -115,9 +130,16 @@ services:
     ports:
       - 8084:80
     networks:
+      - web
       - firefly_iii
     environment:
       - PMA_ARBITRARY=1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ffphpmyadmin.rule=Host(`php.fet.fit`)"
+      - "traefik.http.routers.ffphpmyadmin.entrypoints=websecure"
+      - "traefik.http.services.ffphpmyadmin.loadbalancer.server.port=80"
+      - "traefik.http.routers.ffphpmyadmin.tls.certresolver=lets-encrypt"
 
   redisff:
     image: redis
@@ -133,5 +155,7 @@ volumes:
 
 
 networks:
+  web:
+    external: true
   firefly_iii:
-    driver: bridge
+    external: false
